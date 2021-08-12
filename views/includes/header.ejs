@@ -1,0 +1,30 @@
+<header>
+    <nav>
+        <ul>
+            <% if(isLogin){ 
+                if (type === "doctor"){%>
+                    <li><a href="/doctor/panel">دکتر</a></li>
+                <%} else if(type==="patient"){%>
+                    <li><a href="/patient/panel">بیمار</a></li>
+                <%}else if(type==="admin"){%>
+                    <li><a href="/admin/patient/">بیمار</a></li>
+                    <li><a href="/admin/doctor/">دکتر</a></li>
+                <%}%>
+            <% }else{ %>
+                <li><a href="/auth">ورود</a></li>
+           <% } %> 
+            
+            <li><a href="/">خانه</a></li>
+            
+        </ul>
+        <div>
+            <% if(isLogin){%>
+            <form action="/auth/logout" method="POST">
+                <input type="hidden" name="_csrf" value="<%=csrfToken%>"/>
+                <button class="btn-link" type="submit">خروج</button>    
+            </form>
+            <%}%>
+        </div>
+        
+    </nav>
+</header>

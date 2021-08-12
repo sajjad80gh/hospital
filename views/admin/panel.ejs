@@ -1,0 +1,26 @@
+<%- include('../includes/head.ejs') %>
+
+</head>
+<body>
+    <%- include('../includes/header.ejs') %>
+
+    <div class="container">
+        <div class="row text-center">
+            <form method="POST" action="/admin/panel">
+                <fieldset>
+                    <legend>ثبت ادمین</legend>
+                    <label for="name1">نام</label>
+                    <input id="name1" class="mb-2" type="text" name="username"/>
+                    <br/>
+                    <label for="evidence1">رمز</label>
+                    <input id="evidence1" class="mb-2" type="text" name="password"/>
+                    <br/>
+                    <input type="hidden" name="_csrf" value="<%=csrfToken%>"/>
+                    <button type="submit">ثبت اطلاعات</button>
+                </fieldset>
+            </form>
+            <a class="btn-link" href="/admin/doctor">doctor tabel</a>
+            <a class="btn-link" href="/admin/patient">patient tabel</a>
+        </div>
+    </div>
+<%- include('../includes/footer') %></body>

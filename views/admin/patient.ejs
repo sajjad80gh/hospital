@@ -1,0 +1,52 @@
+<%- include('../includes/head.ejs') %>
+
+</head>
+<body>
+    <%- include('../includes/header.ejs') %>
+
+    <div class="container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>number</th>
+                    <th>username</th>
+                    <th>age</th>
+                    <th>isman</th>
+                    <th>remove</th>
+                </tr>
+            </thead>
+            <tbody>
+                <%if(users[0] !== undefined){%>
+                    <%users.map((val,ind)=>{%>
+                        <tr>
+                            <td><%=ind+1%></td>
+                            <td><%=val.username%></td>
+                            <td><%=val.age%></td>
+                            <td><%=val.isman%></td>
+                            <td>
+                                <form method="POST" action="/admin/removePatient">
+                                    <input type="hidden" value="<%=val.id%>" name="id"/>
+                                    <input type="hidden" name="_csrf" value="<%=csrfToken%>"/>
+                                    <button type="submit">حذف کاربر</button>
+                                </form>
+                            </td>
+                        </tr>
+                    <%})%>
+                <%}else{%>
+                    <tr>
+                        <td colspan="5">not find any patient</td>
+                    </tr>
+                <%}%>
+            </tbody>
+        </table>
+        <div>
+            <div class="pagenation text-center">
+                <a href="/admin/patient?page=<%=page+1%>">بعدی</a>
+                <a href="/admin/patient?page=<%=page%>"><%=page%></a>
+                <%if(page!=1){%>
+                    <a href="/admin/patient?page=<%=page-1%>">قبلی</a>
+                <%}%>
+            </div>
+        </div>
+    </div>
+<%- include('../includes/footer') %></body>

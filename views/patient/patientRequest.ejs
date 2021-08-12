@@ -1,0 +1,46 @@
+<%- include('../includes/head') %>
+
+</head>
+<body>
+    <%- include('../includes/header.ejs') %>
+    <div class="container">
+        <h2 class="text-center">درخواست</h2>
+        <form method="POST" action="/patient/request">
+            <textarea class="textarea" name="message" placeholder="درخواست بیمار"></textarea>
+            <input type="hidden" name="idPatient" value="<%=idPatient%>">
+            <input type="hidden" name="_csrf" value="<%=csrfToken%>"/>
+            <button class="btn-link" type="submit" >ثبت</button>
+        </form>
+    </div> 
+    <hr/>
+    <div class="container">
+        <h2 class="text-center">درخواست</h2>
+        <% patient.map(val=>{ %>
+        <div class="requestPatient mb-2">
+            <div class="row justify-between">
+                <div>
+                    <img src=<%=val.imgSrc%> alt="" width="15" height="15"/>
+                    <span><%=val.name%></span>
+                </div>
+                <div class="font-12">
+                    <%=val.date%>
+                </div>
+            </div>
+            <div class="requestBody "><%=val.description%></div>
+                <%if(val.response.body !== null){%>
+                    <hr/>
+                    <div class="row justify-between">
+                        <div>
+                            <img src=<%=val.response.imgSrc%> alt="" width="15" height="15"/>
+                            <span><%=val.response.name%></span>
+                        </div>
+                        <div class="font-12">
+                            <%=val.response.date%>
+                        </div>
+                    </div>
+                    <div class="requestBody "><%=val.response.body%></div>
+                <%}%>    
+        </div>
+        <%})%>
+    </div>
+<%- include('../includes/footer') %>
