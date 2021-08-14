@@ -1,7 +1,6 @@
 const bcrypt=require("bcryptjs")
 const {validationResult}=require("express-validator")
-const patientModels=require("../models/patient")
-const doctorModels=require("../models/doctor")
+const usersdb=require("../models/users")
 
 exports.getAuth=(req,res,next)=>{
     let message=req.flash("error")
@@ -14,52 +13,45 @@ exports.getAuth=(req,res,next)=>{
 
 
 exports.postSignup=(req,res,next)=>{
-    if(req.body.doctor==="false"){
-        patientModels.findOneByUsername(req.body.name)
-        .then(([rows])=>{
-            if(rows[0]===undefined){
-                bcrypt.hash(req.body.password,12).then(hashPAss=>{
-                    const patient=new patientModels(req.body.name,hashPAss,req.body.age,req.body.isman)
-                    patient.save().then(result=>{
-                        req.session.isLogin=true;
-                        req.session.username=req.body.name;
-                        req.session.iduser=result[0].insertId;
-                        req.session.type="patient";
+    const patient=req.body.doctor==="false"?true:false
+    bcrypt.hash(req.body.password,12)
+    .then(hashPAss=>{
         
-                        res.redirect("/patient/panel")
-                    })
-                    .catch((err)=>console.log(err))
-                }).catch(err=>console.log(err))
-            }else{
-                req.flash("error","username is used")
-                res.redirect("/auth?username=Isused")
+        let userdata={
+            username:req.body.name,
+            password:hashPAss,
+            age:req.body.age,
+            isman:req.body.isman,
+            patient:patient
+        }
+        if(req.body.doctor==="true"){
+            userdata={
+                username:req.body.name,
+                password:hashPAss,
+                madrak:req.body.age,
+                isman:req.body.isman,
+                patient:patient
+            } 
+        }
+        const newuser=new usersdb(userdata)
+        newuser.save().then(result=>{
+            req.session.isLogin=true;
+            req.session.username=req.body.name;
+            req.session.iduser=result._id;
+            req.session.type=result.patient?"patient":"doctor";
+            const redirect =result.patient?"/patient/panel":"/doctor/panel"
+            res.redirect(redirect)
+        }).catch((err)=>{
+            if(err.code==11000){
+                req.flash("error","this username already is used")
+                res.redirect("/auth")
             }
-        }).catch(err=>console.log(err))
-        
-    }else if(req.body.doctor==="true"){ 
-        doctorModels.findByUsername(req.body.name)
-        .then(([rows])=>{
-            if(rows[0]===undefined){
-                bcrypt.hash(req.body.password,12).then(hashpass=>{
-                    const doctor=new doctorModels(req.body.name,hashpass,"",req.body.age,req.body.isman)
-                    doctor.save()
-                    .then(result=>{
-                        req.session.isLogin=true;
-                        req.session.username=req.body.name;
-                        req.session.iduser=result[0].insertId;
-                        req.session.type="doctor";
-        
-                        res.redirect("/doctor/panel")
-                    })
-                })
-            }else{
-                req.flash("error","username is used")
-                res.redirect("/auth?username=Isused")
-            }
+            console.log(err)
         })
-        .catch(err=>console.log(err))
-    }
+    }).catch(err=>console.log(err))
+
 }
+
 exports.postSignin=(req,res,next)=>{
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -70,57 +62,28 @@ exports.postSignin=(req,res,next)=>{
         return res.redirect("/auth/")
     }
 
-    if(req.body.doctor==="false"){
-        patientModels.findOneByUsername(req.body.name).then(([rows,fields])=>{
-            if(rows[0]!==undefined){
-                bcrypt.compare(req.body.password,rows[0].password).then(isOk=>{
-                    if(isOk){
-                        req.session.isLogin=true;
-                        req.session.username=rows[0].username;
-                        req.session.iduser=rows[0].idpatient;
-                        req.session.type="patient";
-
-                        res.redirect("/patient/panel")
-                    }else{
-                        req.flash("error","username or password not curent")
-                        res.redirect("/auth")
-                    }
-                })
-                .catch(err=>console.log(err))
-                
-            }else{
-                req.flash("error","first sign in")
-                res.redirect("/auth")
-            }
-        }).catch(err=>{
-            console.log(err.errno)
-        })
-    }else if(req.body.doctor==="true") {
-        doctorModels.findByUsername(req.body.name)
-        .then(([rows])=>{
-            if(rows[0]!==undefined){
-                bcrypt.compare(req.body.password,rows[0].password)
-                .then(isOk=>{
-                    if(isOk){
-                        console.log(rows)
-                        req.session.isLogin=true;
-                        req.session.username=rows[0].username;
-                        req.session.iduser=rows[0].iddoctor;
-                        req.session.type="doctor";
-
-                        res.redirect("/doctor/panel")
-                    }else{
-                        req.flash("error","username or password not curent")
-                        res.redirect("/auth")
-                    }
-                })
-            }else{
-                req.flash("error","first sign in")
-                res.redirect("/auth")
-            }
-        })
-        .catch(err=>console.log(err))
-    }
+    usersdb.findOne({username:req.body.name})
+    .then((document)=>{
+        if(document !==null){
+            bcrypt.compare(req.body.password,document.password)
+            .then(isOk=>{
+                if(isOk){
+                    req.session.isLogin=true;
+                    req.session.username=document.username;
+                    req.session.iduser=document._id;
+                    req.session.type=document.patient?"patient":"doctor";
+                    const redirect=document.patient?"/patient/panel":"doctor/panel";
+                    res.redirect(redirect)
+                }else{
+                    req.flash("error","username or password not curent")
+                    res.redirect("/auth")
+                }
+            })
+        }else{
+            req.flash("error","username or password not current")
+            res.redirect("/auth")
+        }
+    })
 }
 exports.postLogout = (req, res, next) => {
     req.session.destroy(err => {

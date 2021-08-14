@@ -21,18 +21,19 @@
                 </div>
             </div>
             <div class="requestBody "><%=val.description%></div>
-            <%val.response.map((value)=>{%>
+            <%val.response.map((value)=>{console.log(value)%>
                 <hr color="red"/>
                 <div class="row font-12 justify-between">
                     <div>
-                        <span><%=value.doctorUsername%></span>
+                        <img src="<%=value.imgSrc%>" width="20" height="20"/>
+                        <span><%=value.username%></span>
                     </div>
                     
                     <div>
-                        <%=value.responseDate%>
+                        <%=value.created%>
                     </div>
                 </div>
-                <div class="requestBody "><%=value.reply%></div>
+                <div class="requestBody "><%=value.text%></div>
             <%})%>
             <form method="POST" action="/doctor/patient">
                 <input type="hidden" name="idrequest" value="<%=val.id%>" />

@@ -1,16 +1,17 @@
-const patientModels=require("../models/patient")
+const userdb=require("../models/users")
 const commentsModes=require("../models/comments")
 
 exports.getPanel=(req,res,next)=>{
-    patientModels.findById(req.session.iduser).then(([rows])=>{
+    userdb.findById(req.session.iduser)
+    .then((document)=>{
         res.render("patient/patientPanel",{
             pageTitle:"patientPanel",
             patient:{
-                id:rows[0].idpatient,
-                name:rows[0].username,
-                age:rows[0].age,
+                id:document._id,
+                name:document.username,
+                age:document.age,
                 imgSrc:"",
-                isman:rows[0].isman
+                isman:document.isman
             }
         })
     })
@@ -18,16 +19,21 @@ exports.getPanel=(req,res,next)=>{
 }
 
 exports.postPanel=(req,res,next)=>{
-    patientModels.findOneByUsername(req.body.name)
-    .then(([rows])=>{
-        if(rows[0]===undefined || rows[0].iddoctor == req.body.idDoctor){
-            patientModels.updateById(
-                req.body.idPatient,
-                req.body.name,
-                req.body.age,
-                req.body.isman)
-                .then(()=>{
-                    res.redirect("/patient/panel?okchnage")
+    userdb.findById(req.session.iduser)
+    .then(document=>{
+        if(document !== null || document.username == req.body.name){
+                document.username=req.body.name
+                document.age=req.body.age
+                document.isman=req.body.isman
+                document.save()
+                .then(response=>{
+                    res.redirect("/patient/panel?ok")
+                })
+                .catch(err=>{
+                    if(err.code==11000){
+                        res.redirect("/patient/panel?err=username_uased")
+                    }
+                    console.log(err)
                 })
         }
         else{
@@ -39,38 +45,26 @@ exports.postPanel=(req,res,next)=>{
 
 
 exports.getRequest=(req,res,next)=>{
-    commentsModes.findByIdPatient(req.session.iduser)
-    .then(([rows])=>{
-        const data =rows.reduce((arr,val)=>{
-            return arr.concat({
-                id:val.idrequest,
-                name:val.usernamePatient,
-                date:val.date,
-                description:val.text,
-                imgSrc:"",
-                response:{
-                    body:val.reply,
-                    name:val.doctorUsername,
-                    imgSrc:"",
-                    date:val.responseDate
-                }
-            })
-        },[])
+    commentsModes.find({id:req.session.iduser})
+    .populate("id","username")
+    .populate("reply.id",["username","image"])
+    .exec()
+    .then((data)=>{        
         res.render("patient/patientRequest",{
             pageTitle:"patientPanel",
             idPatient:req.session.iduser,
             patient:data
         })
     })
-
-    
-
 }
 
 
 exports.postRequest=(req,res,next)=>{
-    console.log(req.body.idPatient)
-    const comments=new commentsModes(req.body.idPatient,req.body.message)
+    const comments=new commentsModes({
+        id:req.body.idPatient,
+        text:req.body.message,
+        reply:[]
+    })
     comments.save()
     .then(result=>{
         console.log(result)

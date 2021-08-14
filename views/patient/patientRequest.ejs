@@ -20,26 +20,27 @@
             <div class="row justify-between">
                 <div>
                     <img src=<%=val.imgSrc%> alt="" width="15" height="15"/>
-                    <span><%=val.name%></span>
+                    <span><%=val.id.username%></span>
                 </div>
                 <div class="font-12">
-                    <%=val.date%>
+                    <%=val.created%>
                 </div>
             </div>
-            <div class="requestBody "><%=val.description%></div>
-                <%if(val.response.body !== null){%>
+            <div class="requestBody "><%=val.text%></div>
+                <%if(val.reply !== null){ console.log(val.reply)%>
+                    <%val.reply.map(reply=>{%>
                     <hr/>
                     <div class="row justify-between">
                         <div>
-                            <img src=<%=val.response.imgSrc%> alt="" width="15" height="15"/>
-                            <span><%=val.response.name%></span>
+                            <img src=<%=reply.id.image%> alt="" width="15" height="15"/>
+                            <span><%=reply.id.username%></span>
                         </div>
                         <div class="font-12">
-                            <%=val.response.date%>
+                            <%=reply.created%>
                         </div>
                     </div>
-                    <div class="requestBody "><%=val.response.body%></div>
-                <%}%>    
+                    <div class="requestBody "><%=reply.text%></div>
+                <%})}%>    
         </div>
         <%})%>
     </div>

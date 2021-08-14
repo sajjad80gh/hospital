@@ -11,7 +11,7 @@ router.get("/download",isAdmin.isAdmin,adminControllers.getDownload)
 
 router.post("/panel",isAdmin.isAdmin,adminControllers.postSignAdmin)
 router.post("/",adminControllers.postLoginAdmin)
-router.post("/removePatient",isAdmin.isAdmin,adminControllers.postRemovePatient)
-router.post("/removeDoctor",isAdmin.isAdmin,adminControllers.postRemoveDoctor)
+router.post("/removePatient",isAdmin.isAdmin,adminControllers.postRemove)
+router.post("/removeDoctor",isAdmin.isAdmin,adminControllers.postRemove)
 
 module.exports=router

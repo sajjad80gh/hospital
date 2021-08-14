@@ -6,6 +6,7 @@ const redisStore=require("connect-redis")(session)
 var csurf = require('csurf')
 const flash=require("connect-flash")
 const multer =require("multer")
+const mongoose=require("mongoose")
 
 const patientRoute=require("./routes/patient")
 const doctorRoute=require("./routes/doctor")
@@ -60,5 +61,12 @@ app.use((req,res,next)=>{
     res.status(404).render("error404",{pageTitle:"error 404 hospital"})
 })
 
-
-app.listen(5000)
+mongoose.connect("mongodb://localhost:27017/hospital?readPreference=primary&appname=MongoDB%20Compass&ssl=false",{
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useCreateIndex: true
+})
+.then(()=>{
+    app.listen(5000)
+})
+.catch((err)=>console.log(err))

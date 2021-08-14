@@ -1,6 +1,7 @@
 const bycrypt=require("bcryptjs")
 const admin=require("../models/admin")
-const patient=require("../models/patient")
+const patient=require("../models/users")
+const usersdb=require("../models/users")
 const doctor =require("../models/doctor")
 const path =require("path")
 exports.getAdmin=(req,res,next)=>{
@@ -20,11 +21,11 @@ exports.getPatient=(req,res,next)=>{
     if(!(typeof page == "number" && page > 0)){
         return res.redirect("/admin/patient")
     }
-    patient.findAll((Number(page)-1)*5,5)
-    .then(([rows])=>{
+    usersdb.find({patient:true})
+    .then(result=>{
         res.render("admin/patient",{
             pageTitle:"panel admin patient",
-            users:rows,
+            users:result,
             page:Number(page)
         })
     })
@@ -35,12 +36,11 @@ exports.getDoctor=(req,res,next)=>{
     if(!(typeof page == "number" && page > 0)){
         return res.redirect("/admin/doctor")
     }
-    doctor.findAll((Number(page)-1)*5,5)
-    .then(([rows])=>{
-        console.log(rows)
+    usersdb.find({patient:false})
+    .then(result=>{
         res.render("admin/doctor",{
             pageTitle:"panel admin doctor",
-            users:rows,
+            users:result,
             page:Number(page)
         })
     })
@@ -51,48 +51,55 @@ exports.getDownload=(req,res,next)=>{
 }
 
 exports.postLoginAdmin=(req,res,next)=>{
-    admin.findByUsername(req.body.username)
-    .then(([rows])=>{
-        bycrypt.compare(req.body.password,rows[0].password)
-        .then(ok=>{
-            if(ok){
-                req.session.userid=rows[0].is_admin
-                req.session.isLogin=true
-                req.session.type="admin"
-                req.session.username=rows[0].username
-
-                res.redirect("/admin/panel")
-            }else{
-                req.flash("error","username or password not current")
-                res.redirect("/admin/")
-            }
-        })
+    usersdb.findOne({username:req.body.username})
+    .then((document)=>{
+        if(document === null){
+            req.flash("error","username or password not current")
+            res.redirect("/admin/")
+            return next()
+        }
+        console.log(document)
+        console.log(document.admin !== undefined ,document.admin)
+        if(document.admin !== undefined && document.admin){
+            bycrypt.compare(req.body.password,document.password)
+            .then(ok=>{
+                if(ok){
+                    req.session.userid=document._id
+                    req.session.isLogin=true
+                    req.session.type="admin"
+                    req.session.username=document.username
+                    res.redirect("/admin/panel")
+                }else{
+                    req.flash("error","username or password not current")
+                    res.redirect("/admin/")
+                }
+            })
+        }else{
+            req.flash("error","username or password not current")
+            res.redirect("/admin/")
+        }
     })
 }
+
 exports.postSignAdmin=(req,res,next)=>{
     bycrypt.hash(req.body.password,12)
     .then(hash=>{
-        const admino=new admin(req.body.username,hash)
+        const admino=new usersdb({
+            username:req.body.username,
+            password:hash,
+            admin:true
+        })
         admino.save().then(result=>{
-            console.log(result)
-            res.redirect("/admin/panel")
+            res.redirect("/admin/panel?addNew")
         })
     })
     
 }
 
-exports.postRemovePatient=(req,res,next)=>{
-    patient.removeById(req.body.id)
-    .then(()=>{
-        res.redirect("/admin/patient")
+exports.postRemove=(req,res,next)=>{
+    usersdb.findOneAndDelete(req.body.id)
+    .then((result)=>{
+        console.log(result)
+        res.redirect("/admin/panel")
     })
 }
-
-exports.postRemoveDoctor=(req,res,next)=>{
-    doctor.removeById(req.body.id)
-    .then(response=>{
-        console.log(response)
-        res.redirect("/admin/doctor")
-    })
-}
-

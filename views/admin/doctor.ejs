@@ -11,8 +11,8 @@
                     <th>number</th>
                     <th>image</th>
                     <th>username</th>
-                    <th>madrak</th>
-                    <th>takhasos</th>
+                    <th>age</th>
+                    <th>isman</th>
                     <th>remove</th>
                 </tr>
             </thead>
@@ -27,8 +27,8 @@
                                 </a>
                             </td>
                             <td><%=val.username%></td>
-                            <td><%=val.madrak%></td>
-                            <td><%=val.takhasos%></td>
+                            <td><%=val.age%></td>
+                            <td><%=val.isman%></td>
                             <td>
                                 <form method="POST" action="/admin/removeDoctor">
                                     <input type="hidden" name="_csrf" value="<%=csrfToken%>"/>
