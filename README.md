@@ -1,2 +1,2 @@
 # hospital
-practice node js
+practice express
