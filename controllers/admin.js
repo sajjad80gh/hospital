@@ -1,30 +1,17 @@
 const bycrypt=require("bcryptjs")
-const admin=require("../models/admin")
-const patient=require("../models/users")
 const usersdb=require("../models/users")
-const doctor =require("../models/doctor")
 const path =require("path")
-exports.getAdmin=(req,res,next)=>{
-    res.render("admin/sign",{
-        pageTitle:"ورود به پنل ادمین",
-        error:req.flash("error")
-    })
-}
-exports.getPanel=(req,res,next)=>{
-    res.render("admin/panel",{
-        pageTitle:"panel admin",
+const jwt=require("jsonwebtoken")
 
-    })
-}
 exports.getPatient=(req,res,next)=>{
-    const page=req.query.page?Number(req.query.page):1
+    let page=req.query.page?Number(req.query.page):1
     if(!(typeof page == "number" && page > 0)){
-        return res.redirect("/admin/patient")
+        page=1
     }
     usersdb.find({patient:true})
+    .skip(page*5).limit(5)
     .then(result=>{
-        res.render("admin/patient",{
-            pageTitle:"panel admin patient",
+        res.json({
             users:result,
             page:Number(page)
         })
@@ -32,14 +19,14 @@ exports.getPatient=(req,res,next)=>{
 }
 
 exports.getDoctor=(req,res,next)=>{
-    const page=req.query.page?Number(req.query.page):1
+    let page=req.query.page?Number(req.query.page):1
     if(!(typeof page == "number" && page > 0)){
-        return res.redirect("/admin/doctor")
+        page=1
     }
     usersdb.find({patient:false})
+    .skip(page*5).limit(5)
     .then(result=>{
-        res.render("admin/doctor",{
-            pageTitle:"panel admin doctor",
+        res.json({
             users:result,
             page:Number(page)
         })
@@ -54,29 +41,25 @@ exports.postLoginAdmin=(req,res,next)=>{
     usersdb.findOne({username:req.body.username})
     .then((document)=>{
         if(document === null){
-            req.flash("error","username or password not current")
-            res.redirect("/admin/")
+            res.json({error:"username or password not current"})
             return next()
         }
-        console.log(document)
-        console.log(document.admin !== undefined ,document.admin)
         if(document.admin !== undefined && document.admin){
             bycrypt.compare(req.body.password,document.password)
             .then(ok=>{
                 if(ok){
-                    req.session.userid=document._id
-                    req.session.isLogin=true
-                    req.session.type="admin"
-                    req.session.username=document.username
-                    res.redirect("/admin/panel")
+                    const token=jwt.sign({
+                        username:document.username,
+                        id:document._id,
+                        type:req.body.type,
+                    },"secret",{expiresIn:"2h"})
+                    res.status(200).json({token:token})
                 }else{
-                    req.flash("error","username or password not current")
-                    res.redirect("/admin/")
+                    return res.status(244).json({error:"username or password not current"})
                 }
             })
         }else{
-            req.flash("error","username or password not current")
-            res.redirect("/admin/")
+            return res.status(244).json({error:"username or password not current"})
         }
     })
 }
@@ -90,7 +73,7 @@ exports.postSignAdmin=(req,res,next)=>{
             admin:true
         })
         admino.save().then(result=>{
-            res.redirect("/admin/panel?addNew")
+            res.json({message:"save the user is ok"})
         })
     })
     
@@ -99,7 +82,6 @@ exports.postSignAdmin=(req,res,next)=>{
 exports.postRemove=(req,res,next)=>{
     usersdb.findOneAndDelete(req.body.id)
     .then((result)=>{
-        console.log(result)
-        res.redirect("/admin/panel")
+        res.json({message:"user was deleted"})
     })
 }

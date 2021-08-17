@@ -4,12 +4,6 @@ const {body}= require("express-validator")
 const router=express.Router()
 const authControllers=require("../controllers/auth")
 
-// /auth =>GET
-router.get("/auth",authControllers.getAuth)
-
-// /auth/logout =>post
-router.post("/auth/logout",authControllers.postLogout)
-
 // /auth =>Post
 router.post("/auth/signin",
 body('name','یوزنیم باید پر شود').notEmpty(),

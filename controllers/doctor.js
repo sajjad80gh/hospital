@@ -4,17 +4,14 @@ const fs=require("fs")
 const path =require("path")
 
 exports.getPanel=(req,res,next)=>{
-    usersdb.findById(req.session.iduser)
+    usersdb.findById(req.userId)
     .then((documents)=>{
-        res.render("doctor/doctorPanel",{
-            pageTitle:"doctorPanel",
-            doctor:{
-                id:documents._id,
-                name:documents.username,
-                proficiency:documents.age,
-                imgSrc:documents.image,
-                evidence:documents.isman
-            }
+        res.status(200).json({
+            id:documents._id,
+            name:documents.username,
+            proficiency:documents.age,
+            imgSrc:documents.image,
+            evidence:documents.isman
         })
     })
 }
@@ -23,7 +20,6 @@ exports.getPanel=(req,res,next)=>{
 exports.postPanel=(req,res,next)=>{
     usersdb.findById(req.body.idDoctor)
     .then(async(document)=>{
-
         if(req.file!==undefined && document.image !== undefined){
             await fs.unlink(path.join(__dirname,"../public",document.image),(err)=>{
                 console.log(err)
@@ -42,13 +38,12 @@ exports.postPanel=(req,res,next)=>{
             })
             .catch(err=>{
                 if(err.code==11000){
-                    res.redirect("/doctor/panel?err=username_uased")
+                    res.status(422).json({message:""})
                 }
-                console.log(err)
             })
         }
         else{
-            res.redirect("/doctor/panel?notchange")
+            res.status(422).json({message:"user not find"})
         }
     })
 }
@@ -62,7 +57,6 @@ exports.getPatient = (req,res,next)=>{
     .exec()
     .then((rows)=>{
         const data =rows.reduce((arr,val)=>{
-            console.log(val.reply)
             const reply=val.reply.map(val=>{
                 return {
                     text:val.text,
@@ -82,16 +76,13 @@ exports.getPatient = (req,res,next)=>{
         },[])
         return data
     }).then(rsult=>{
-        res.render("patient/patientGet",{
-            pageTitle:"doctorPanel",
-            patient:rsult
-        })
+        res.status(200).json({results:rsult})
     })
     
 }
 exports.postPatient=(req,res,next)=>{
     const id=req.body.idrequest,
-    iddoctor=req.session.iduser,
+    iddoctor=req.userId,
     comment=req.body.comment
     commentsModes.findById(id)
     .then((result)=>{          
@@ -103,7 +94,7 @@ exports.postPatient=(req,res,next)=>{
         result.reply=items
         result.save()
         .then(()=>{
-            res.redirect("/doctor/patient")
+            res.status(201).json({message:"response is send"})
         })
     })
 }

@@ -2,24 +2,20 @@ const userdb=require("../models/users")
 const commentsModes=require("../models/comments")
 
 exports.getPanel=(req,res,next)=>{
-    userdb.findById(req.session.iduser)
+    userdb.findById(req.userId)
     .then((document)=>{
-        res.render("patient/patientPanel",{
-            pageTitle:"patientPanel",
-            patient:{
-                id:document._id,
-                name:document.username,
-                age:document.age,
-                imgSrc:"",
-                isman:document.isman
-            }
+        res.status(200).json({
+            id:document._id,
+            name:document.username,
+            age:document.age,
+            imgSrc:"",
+            isman:document.isman
         })
     })
-    
 }
 
 exports.postPanel=(req,res,next)=>{
-    userdb.findById(req.session.iduser)
+    userdb.findById(req.userId)
     .then(document=>{
         if(document !== null || document.username == req.body.name){
                 document.username=req.body.name
@@ -27,17 +23,16 @@ exports.postPanel=(req,res,next)=>{
                 document.isman=req.body.isman
                 document.save()
                 .then(response=>{
-                    res.redirect("/patient/panel?ok")
+                    res.status(200).json({message:"send message"})
                 })
                 .catch(err=>{
                     if(err.code==11000){
-                        res.redirect("/patient/panel?err=username_uased")
+                        res.status(403).json({message:"its used"})
                     }
-                    console.log(err)
                 })
         }
         else{
-            res.redirect("/patient/panel?notchnage")
+            res.status(404).json({message:"not find "})
         }
     })
 }
@@ -45,14 +40,13 @@ exports.postPanel=(req,res,next)=>{
 
 
 exports.getRequest=(req,res,next)=>{
-    commentsModes.find({id:req.session.iduser})
+    commentsModes.find({id:req.userId})
     .populate("id","username")
     .populate("reply.id",["username","image"])
     .exec()
     .then((data)=>{        
-        res.render("patient/patientRequest",{
-            pageTitle:"patientPanel",
-            idPatient:req.session.iduser,
+        res.status(200).json({
+            idPatient:req.userId,
             patient:data
         })
     })
@@ -67,7 +61,6 @@ exports.postRequest=(req,res,next)=>{
     })
     comments.save()
     .then(result=>{
-        console.log(result)
-        res.redirect("/patient/request")
+        res.status(200).json({message:"its ok"})
     })
 }
